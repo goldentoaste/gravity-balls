@@ -2,7 +2,14 @@ body {
     font: 14px "Century Gothic", Futura, sans-serif;
     margin: 20px;
 }
-
+/* TextField{
+    margin: 20px;
+} */
+/* canvas{
+    border: 10px;
+    border-color: "#304050";
+} */
+/*
 ol,
 ul {
     padding-left: 30px;
@@ -48,4 +55,4 @@ ul {
 
 .game-info {
     margin-left: 20px;
-}
+} */

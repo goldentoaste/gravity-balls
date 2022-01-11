@@ -1,7 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import { InputAdornment } from '@mui/material';
 
 class Vector2 {
 
@@ -55,7 +62,7 @@ class Vector2 {
 
     add(vec) {
         //adds another vector onto this one, and return result
-        
+
         return new Vector2(this.x + vec.x, this.y + vec.y);
     }
 
@@ -66,13 +73,13 @@ class Vector2 {
     }
 
     distTo(vec) {
-        
+
         return vec.add(this.mul(-1)).mag();
     }
 
     normalized() {
         let mag = this.mag()
-        if (mag === 0){
+        if (mag === 0) {
             return Vector2.zero;
         }
         return new Vector2(this.x / mag, this.y / mag);
@@ -131,8 +138,8 @@ class GravityBall {
         force: Vector2, in kg*m/s^2
         dt: float, change in time
         */
-        
-        this.velocity = this.velocity.add(force.mul(multiplier *  dt / this.mass));
+
+        this.velocity = this.velocity.add(force.mul(multiplier * dt / this.mass));
         // print(this.velocity)
     }
 
@@ -155,10 +162,8 @@ class GravityBall {
         b2.applyImpulse(F.mul(-1), deltaTime);
     }
 
-    updatePos(){
-        print(this.velocity)
-        print(this.position)
-        this.position =  this.position.add(this.velocity);
+    updatePos() {
+        this.position = this.position.add(this.velocity);
     }
 
     draw(ctx) {
@@ -186,10 +191,10 @@ const Canvas = ({ objs, updateCallback, props }) => {
         const canvas = canvasRef.current
         const context = canvas.getContext('2d');
 
-        
+
         let interval = setInterval(() => {
             updateCallback();
-            context.clearRect(0, 0, context.canvas.width, context.canvas.height)    
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height)
             for (let item of objs) {
                 item.draw(context);
             }
@@ -202,42 +207,186 @@ const Canvas = ({ objs, updateCallback, props }) => {
     );
 }
 
+const AddObjDialog = ({ onFinish }) => {
+    const [open, setOpen] = useState(false);
+
+    const posRef = useRef(null);
+    const velRef = useRef(null);
+    const massRef = useRef(null);
+    const radiusRef = useRef(null);
+    const nameRef = useRef(null);
+    const nameColorRef = useRef(null);
+    const colorRef = useRef(null);
+
+    const [posValid, setPosValid] = useState(false);
+    const [velValid, setVelValid] = useState(false);
+
+
+    return (
+        <div>
+            <Button variant="outlined" onClick={() => { setOpen(true) }}>
+                Add Ball
+            </Button>
+            {/* do on finish values */}
+            <Dialog open={open} onClose={() => { setOpen("false") }}
+            >
+                <DialogTitle>Add a new gravity ball!</DialogTitle>
+                <DialogContent>
+                    Add a new gravity ball, with initial position and velocity, mass, radius(visual only, interact as if radius is 0). Color, name, name color are optional.
+                    Also, coordinate starts with 0,0 at upper left corner, positive X is right, positive Y is down.
+
+                    <TextField
+                        inputRef={posRef}
+                        variant="outlined"
+                        margin='normal'
+                        label="ini position"
+                        fullWidth
+                        defaultValue="(200 , 200)"
+                        onChange={(e) => {
+                            let newVal = e.target.value.replace(/{[^1-9,.]}/, "");
+                            e.target.value = newVal;
+                            setPosValid(newVal.split(",").every((val) => !isNaN(val)));
+                        }}
+                        error={posValid}
+                    />
+                    <TextField
+                        inputRef={velRef}
+                        variant="outlined"
+                        margin='normal'
+                        fullWidth
+                        label="ini velocity"
+                        defaultValue="(0 , 0)"
+                        onChange={(e) => {
+                            let newVal = e.target.value.replace(/{[^1-9,.]}/, "");
+                            e.target.value = newVal;
+                            setVelValid(newVal.split(",").every((val) => !isNaN(val)));
+                        }}
+                        error={velValid}
+                    />
+                    <TextField
+                        inputRef={massRef}
+                        type="number"
+                        margin='normal'
+                        variant="outlined"
+                        label="mass"
+                        defaultValue={10000000000000}
+                        InputProps={
+                            {
+                                endAdornment: <InputAdornment position='end'>kg</InputAdornment>,
+                            }
+                        }
+                    />
+                    <TextField
+                        inputRef={radiusRef}
+                        type="number"
+                        margin='normal'
+                        variant="outlined"
+                        label="radius"
+                        defaultValue={10}
+                        InputProps={
+                            {
+                                endAdornment: <InputAdornment position='end'>km</InputAdornment>,
+                            }
+                        }
+                    />
+
+                    <TextField
+                        inputRef={nameRef}
+                        margin='normal'
+                        variant="outlined"
+                        label="name"
+                        fullWidth
+                        defaultValue={"gravity ball!"}
+                    />
+                    <TextField
+
+                        inputRef={colorRef}
+                        margin='normal'
+                        variant="outlined"
+                        label="color"
+                        defaultValue={"#304050"}
+                    />
+                    <TextField
+                        inputRef={nameColorRef}
+                        defaultValue={"#efe0e2"}
+                        margin='normal'
+                        variant="outlined"
+                        label="name color"
+                    />
+                </DialogContent>
+                <DialogActions>
+
+                    <Button 
+                    onClick={() => {
+                        setOpen(false);
+                        onFinish(
+                            posRef.current.value,
+                            velRef.current.value,
+                            massRef.current.value,
+                            radiusRef.current.value,
+                            colorRef.current.value,
+                            nameRef.current.value,
+                            nameColorRef.current.value
+                        );
+                    }}>
+                        Add!
+                    </Button>
+                    <Button onClick={() => setOpen(false)}>Cancel</Button>
+                </DialogActions>
+            </Dialog>
+        </div>
+    );
+
+}
+
 const print = (item) => {
     console.log(item)
 }
 
 const Parent = () => {
-
-
     let stuff = [
-        new GravityBall(new Vector2(600, 400), Vector2.zero, 10000000000000000, 20),
-        new GravityBall(new Vector2(1000, 400), new Vector2(0  , 1), 10000000000 , 5),
-        new GravityBall(new Vector2(200, 400), new Vector2(0  ,-1), 10000000000 , 12),
-     
+        new GravityBall(new Vector2(500, 400), new Vector2(0, 2), 8000000000000000, 30),
+        new GravityBall(new Vector2(700, 400), new Vector2(0, -2), 8000000000000000, 30),
+        new GravityBall(new Vector2(1000, 400), new Vector2(0, 3.2), 10000000000000, 4),
+        new GravityBall(new Vector2(300, 400), new Vector2(0, -3.5), 90000000000000, 9),
+        new GravityBall(new Vector2(600, 800), new Vector2(3, 0.4), 9000000000000, 15),
+
     ]
-
-
-
     const update = () => {
         let o = {};
         for (let item1 of stuff) {
-            for (let item2 of stuff) { 
+            for (let item2 of stuff) {
 
-                if((!(o[item1] === item2) || !(o[item2] === item1)) && item1 !== item2) {
+                if ((!(o[item1] === item2) || !(o[item2] === item1)) && item1 !== item2) {
                     item1.applyAttraction(item2);
                     o[item1] = item2;
                     o[item2] = item1;
                 }
             }
         }
-
-        for (let item of stuff){
+        for (let item of stuff) {
             item.updatePos();
         }
+    }
+
+    const strToVec = (str)=> new Vector2(...(str.replace(/[^0-9,.]/g, "").split(",").map((item)=>parseFloat(item))
+    ))
+    const makeBall = (posRef, velRef, massRef, radiusRef, colorRef, nameRef, nameColorRef) => {
+        //.map((item)=>parseFloat(item))
+        
+        stuff.push(new GravityBall(strToVec(posRef),strToVec( velRef), parseFloat(massRef), parseFloat(radiusRef), colorRef, nameRef, nameColorRef));
+        print(stuff)
     }
     return (
         <div className="container">
             <div className="menuGroup">
+                <div className="buttonGroup">
+                    <Button variant="outlined" onClick={() => {
+                        stuff.length = 0;
+                    }}>Clear</Button>
+                    <AddObjDialog onFinish={makeBall} />
+
+                </div>
             </div>
             <div className="canvas">
                 <Canvas objs={stuff} updateCallback={update} props={{ height: 2000, width: 2000 }} />
