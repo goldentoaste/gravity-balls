@@ -210,9 +210,10 @@ const Parent = () => {
 
 
     let stuff = [
-        new GravityBall(new Vector2(400, 400), Vector2.zero, 10000000000000000, 20),
-        new GravityBall(new Vector2(200, 100), new Vector2(1  , 0), 1000000000000000 , 14),
-     //   new GravityBall(new Vector2(150, 200), new Vector2(0  ,1), 10000000000000000 , 14),
+        new GravityBall(new Vector2(600, 400), Vector2.zero, 10000000000000000, 20),
+        new GravityBall(new Vector2(1000, 400), new Vector2(0  , 1), 10000000000 , 5),
+        new GravityBall(new Vector2(200, 400), new Vector2(0  ,-1), 10000000000 , 12),
+     
     ]
 
 
@@ -222,7 +223,7 @@ const Parent = () => {
         for (let item1 of stuff) {
             for (let item2 of stuff) { 
 
-                if(!(item1 in o) && !(item2 in o) && item1 !== item2) {
+                if((!(o[item1] === item2) || !(o[item2] === item1)) && item1 !== item2) {
                     item1.applyAttraction(item2);
                     o[item1] = item2;
                     o[item2] = item1;
