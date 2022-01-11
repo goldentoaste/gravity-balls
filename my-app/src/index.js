@@ -4,6 +4,8 @@ import './index.css';
 
 
 class Vector2{
+
+
     constructor(x, y){
         this.x = x;
         this.y = y;
@@ -79,9 +81,73 @@ class Vector2{
     }
 }
 
-// class GravityBall {
-//     constructor(x, y, )
-// }
+
+const G = 6.674e-12; //universal gravitational constant
+const deltaTime = 0.05;
+class GravityBall {
+    constructor(position = Vector2.zero(), velocity = Vector2.zero(), mass = 0.0, radius = 0.0, color = "#304050", name = "wow!", nameColor = "#efe0e2"){
+        /*
+        postion : Vector2, initial postition of this ball
+        velocity : Vector2, initial velocity of this ball, in m/s
+        mass: float, mass of this ball, in kg
+        radius: float, radius of this ball, in m
+        */
+
+        this.position = position;
+        this.velocity = velocity;
+        this.mass = mass;
+        this.radius = radius;
+        this.color = color;
+        this.name = name;
+        this.nameColor = nameColor;
+    }
+
+    get x(){
+        return this.position.x;
+    }
+
+    get y(){
+        return this.position.y;
+    }
+
+    get deltaX(){
+        return this.velocity.x;
+    }
+
+    get deltaY(){
+        return this.velocity.y;
+    }
+
+    applyImpulse(force = Vector2.zero(), dt = 0.0){
+        /*
+        impulse/change in momentum = F * dt = M * A * dt
+        => change in velocity = F * dt / mass
+        force: Vector2, in kg*m/s^2
+        dt: float, change in time
+        */
+
+        this.velocity = this.velocity.add(force.mul(dt/this.mass));
+    }
+
+    applyAttraction(b2){
+        /*
+            applying newton's gravitation formula:
+
+            F = G * (m1 * m2) * dir / r^2 
+            where dir is the normalized vector/direction from b1 to b2, thus F is a force vector
+            b1 attracts b2 by F, b2 attacts b1 by -F
+
+            note this function applies force to both objects to save a tiny bit of computation, so only 1 call is needed.
+        */
+        let dir = b2.position.add(this.position.mul(-1)).normalized(); //unit vector for direction
+        let distance = this.position.distTo(b2.position)
+        let F = dir.mul(G * this.mass * b2.mass / (distance ** 2))
+
+        b2.applyImpulse(F, deltaTime);
+        this.applyImpulse(F.mul(-1), deltaTime);
+    }
+    
+}
 
 
 
