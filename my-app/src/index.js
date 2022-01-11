@@ -1,30 +1,30 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
 
-class Vector2{
+class Vector2 {
 
 
-    constructor(x, y){
+    constructor(x, y) {
         this.x = x;
         this.y = y;
     }
 
-    static zero(){
-        return new Vector2(0,0);
+    static get zero() {
+        return new Vector2(0, 0);
     }
 
-    static r2d(rad){
+    static r2d(rad) {
         //converts radian into degrees
-        return 360 * rad / (2*Math.PI);
+        return 360 * rad / (2 * Math.PI);
     }
 
-    static d2r(deg){
-        return (deg/360) * 2 * Math.PI;
+    static d2r(deg) {
+        return (deg / 360) * 2 * Math.PI;
     }
 
-    rotated(angle){
+    rotated(angle) {
         //rotates this vector by angle in radians, then return the rotated vector.
 
         let cos = Math.cos(angle);
@@ -40,52 +40,56 @@ class Vector2{
     }
 
     mag() {
-        return Math.sqrt(this.x**2 + this.y**2);
+        return Math.sqrt(this.x ** 2 + this.y ** 2);
     }
 
-    angle(){
+    angle() {
         //returns angle relative to x-axis in radians
         return Math.atan2(this.y, this.x);
     }
 
-    dot(v2){
+    dot(v2) {
         //returns the dot product of the 2 vectors, does not change either.
         return (this.x * v2.x) + (this.y * v2.y);
     }
 
-    add(vec){
+    add(vec) {
         //adds another vector onto this one, and return result
-        this.x += vec.x;
-        this.y += vec.y;
-        return this;
+        
+        return new Vector2(this.x + vec.x, this.y + vec.y);
     }
 
-    mul(float){
+    mul(float) {
         //mutipleis this vector with a float, and returns result
-        this.x *= float
-        this.y *= float
-        return this;
+
+        return new Vector2(float * this.x, float * this.y);
     }
 
-    distTo(vec){
+    distTo(vec) {
+        
         return vec.add(this.mul(-1)).mag();
     }
 
-    normalized(){
+    normalized() {
         let mag = this.mag()
+        if (mag === 0){
+            return Vector2.zero;
+        }
         return new Vector2(this.x / mag, this.y / mag);
     }
 
-    toString(){
+    toString() {
         return `Vector2 (${this.x} , ${this.y})`
     }
 }
 
 
 const G = 6.674e-12; //universal gravitational constant
-const deltaTime = 0.05;
+const updatesPerSec = 60;
+const deltaTime = 1 / updatesPerSec;
+const multiplier = 1;
 class GravityBall {
-    constructor(position = Vector2.zero(), velocity = Vector2.zero(), mass = 0.0, radius = 0.0, color = "#304050", name = "wow!", nameColor = "#efe0e2"){
+    constructor(position = Vector2.zero(), velocity = Vector2.zero(), mass = 0.0, radius = 0.0, color = "#304050", name = "wow!", nameColor = "#efe0e2") {
         /*
         postion : Vector2, initial postition of this ball
         velocity : Vector2, initial velocity of this ball, in m/s
@@ -102,51 +106,71 @@ class GravityBall {
         this.nameColor = nameColor;
     }
 
-    get x(){
+    get x() {
         return this.position.x;
     }
 
-    get y(){
+    get y() {
         return this.position.y;
     }
 
-    get deltaX(){
+    get deltaX() {
         return this.velocity.x;
     }
 
-    get deltaY(){
+    get deltaY() {
         return this.velocity.y;
     }
 
-    applyImpulse(force = Vector2.zero(), dt = 0.0){
+
+
+    applyImpulse(force = Vector2.zero(), dt = 0.0) {
         /*
         impulse/change in momentum = F * dt = M * A * dt
         => change in velocity = F * dt / mass
         force: Vector2, in kg*m/s^2
         dt: float, change in time
         */
-
-        this.velocity = this.velocity.add(force.mul(dt/this.mass));
+        
+        this.velocity = this.velocity.add(force.mul(multiplier *  dt / this.mass));
+        // print(this.velocity)
     }
 
-    applyAttraction(b2){
+    applyAttraction(b2) {
         /*
             applying newton's gravitation formula:
-
+    
             F = G * (m1 * m2) * dir / r^2 
             where dir is the normalized vector/direction from b1 to b2, thus F is a force vector
             b1 attracts b2 by F, b2 attacts b1 by -F
-
+    
             note this function applies force to both objects to save a tiny bit of computation, so only 1 call is needed.
         */
-        let dir = b2.position.add(this.position.mul(-1)).normalized(); //unit vector for direction
-        let distance = this.position.distTo(b2.position)
-        let F = dir.mul(G * this.mass * b2.mass / (distance ** 2))
 
-        b2.applyImpulse(F, deltaTime);
-        this.applyImpulse(F.mul(-1), deltaTime);
+        let dir = b2.position.add(this.position.mul(-1)).normalized(); //unit vector for direction
+
+        let distance = this.position.distTo(b2.position);
+        let F = dir.mul(G * this.mass * b2.mass / (distance ** 2));
+        this.applyImpulse(F, deltaTime);
+        b2.applyImpulse(F.mul(-1), deltaTime);
     }
-    
+
+    updatePos(){
+        print(this.velocity)
+        print(this.position)
+        this.position =  this.position.add(this.velocity);
+    }
+
+    draw(ctx) {
+
+        ctx.fillStyle = this.color;
+        ctx.beginPath()
+        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI)
+        ctx.fill()
+    }
+
+
+
 }
 
 
@@ -156,57 +180,66 @@ https://medium.com/@pdx.lucasm/canvas-with-react-js-32e133c05258
 yoink!
 */
 
-const Canvas = (props) => {
+const Canvas = ({ objs, updateCallback, props }) => {
     const canvasRef = useRef(null); //null as initial val
-
-    
-
-    const update = (ctx , frame) => {
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height) //reset
-
-        ctx.fillStyle = '#000'
-        ctx.beginPath()
-        ctx.arc(50, 100, 20 * Math.abs(Math.sin(frame * 0.05)), 0, 2 * Math.PI)
-        ctx.fill()
-    }
-
-
-
-    useEffect(()=>{
+    useEffect(() => {
         const canvas = canvasRef.current
-        const context = canvas.getContext('2d')
+        const context = canvas.getContext('2d');
 
+        
+        let interval = setInterval(() => {
+            updateCallback();
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height)    
+            for (let item of objs) {
+                item.draw(context);
+            }
+        }, deltaTime * 1000);
 
-        let frame = 0
-        let animationFrameid
-        const render = () => {
-            frame ++
-            update(context, frame)
-            animationFrameid = window.requestAnimationFrame(render)
-        }
-
-        render()
-        return () => {
-            window.cancelAnimationFrame(animationFrameid)
-        }
-    }, [update]) //initialize canvas on initial render
-
+        return () => clearInterval(interval);
+    }, []) //initialize canvas on initial render
     return (
-        <canvas ref = {canvasRef} {...props}/>
+        <canvas ref={canvasRef} {...props} />
     );
 }
 
-
+const print = (item) => {
+    console.log(item)
+}
 
 const Parent = () => {
 
-     return (
+
+    let stuff = [
+        new GravityBall(new Vector2(400, 400), Vector2.zero, 10000000000000000, 20),
+        new GravityBall(new Vector2(200, 100), new Vector2(1  , 0), 1000000000000000 , 14),
+     //   new GravityBall(new Vector2(150, 200), new Vector2(0  ,1), 10000000000000000 , 14),
+    ]
+
+
+
+    const update = () => {
+        let o = {};
+        for (let item1 of stuff) {
+            for (let item2 of stuff) { 
+
+                if(!(item1 in o) && !(item2 in o) && item1 !== item2) {
+                    item1.applyAttraction(item2);
+                    o[item1] = item2;
+                    o[item2] = item1;
+                }
+            }
+        }
+
+        for (let item of stuff){
+            item.updatePos();
+        }
+    }
+    return (
         <div className="container">
             <div className="menuGroup">
-            
             </div>
             <div className="canvas">
-                <Canvas/>
+                <Canvas objs={stuff} updateCallback={update} props={{ height: 2000, width: 2000 }} />
             </div>
         </div>
     );
