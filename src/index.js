@@ -346,7 +346,7 @@ const print = (item) => {
 const Parent = () => {
     let stuff = [
         new GravityBall(new Vector2(500, 400), new Vector2(0, 2), 8000000000000000, 30),
-        new GravityBall(new Vector2(700, 400), new Vector2(0, -2), 8000000000000000, 30),
+        // new GravityBall(new Vector2(700, 400), new Vector2(0, -2), 8000000000000000, 30),
         new GravityBall(new Vector2(1000, 400), new Vector2(0, 3.2), 10000000000000, 4),
         new GravityBall(new Vector2(300, 400), new Vector2(0, -3.5), 90000000000000, 9),
         new GravityBall(new Vector2(600, 800), new Vector2(3, 0.4), 9000000000000, 15),
