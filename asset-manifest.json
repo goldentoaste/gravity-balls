@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.css": "/goldentoaste/gravity-balls/static/css/main.b1944bdf.css",
-    "main.js": "/goldentoaste/gravity-balls/static/js/main.832ee9ab.js",
-    "index.html": "/goldentoaste/gravity-balls/index.html",
-    "main.b1944bdf.css.map": "/goldentoaste/gravity-balls/static/css/main.b1944bdf.css.map",
-    "main.832ee9ab.js.map": "/goldentoaste/gravity-balls/static/js/main.832ee9ab.js.map"
+    "main.css": "/gravity-balls/static/css/main.b1944bdf.css",
+    "main.js": "/gravity-balls/static/js/main.832ee9ab.js",
+    "index.html": "/gravity-balls/index.html",
+    "main.b1944bdf.css.map": "/gravity-balls/static/css/main.b1944bdf.css.map",
+    "main.832ee9ab.js.map": "/gravity-balls/static/js/main.832ee9ab.js.map"
   },
   "entrypoints": [
     "static/css/main.b1944bdf.css",
